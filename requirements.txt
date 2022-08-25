@@ -1,5 +1,4 @@
 aionotify==0.2.0
-alabaster @ file:///home/ktietz/src/ci/alabaster_1611921544520/work
 altair==4.1.0
 anaconda-client @ file:///opt/concourse/worker/volumes/live/ce6e20ef-c449-4fb2-5463-03f67f4a0b31/volume/anaconda-client_1635342572171/work
 anaconda-navigator==2.1.2
