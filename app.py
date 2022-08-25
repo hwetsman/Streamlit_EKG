@@ -155,7 +155,7 @@ def Cull_Dense_R_Peak(ekg):
 
 
 # create streamlit page
-path = './apple_health_export/'
+path = './'
 dir = path + 'electrocardiograms'
 ekgs = os.listdir(dir)
 st.set_page_config(layout="wide")
