@@ -159,179 +159,181 @@ path = './'
 dir = path + 'electrocardiograms'
 ekgs = os.listdir(dir)
 st.set_page_config(layout="wide")
-if os.path.isfile('EKGs.csv'):
-    index = 0
-else:
-    index = 1
-function = st.sidebar.selectbox(
-    'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'], index=index)
-ekg_df = pd.read_csv('EKGs.csv')
-
-#############skip for now#################
-if function == 'Reset EKG Database':
-    a = st.empty()
-    a.write(f'I am creating an index of your {len(ekgs)} EKGs...')
-    ekg_df = Create_EKG_DF(ekgs)
-    # poor = ekg_df[ekg_df.clas=='Poor Recording']
-    ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
-    ekg_df.to_csv('EKGs.csv', index=False)
-    st.write(ekg_df)
-    a.write(
-        f'I have finished writing {ekg_df.shape[0]} EKGs with good recordings to EKGs.csv. Try another function!')
-##########################################
-elif function == 'Show PACs Over Time':
-    ekg_df = pd.read_csv('EKGs.csv')
-    ekg_df.reset_index(inplace=True, drop=True)
-
-    if 'PACs' not in ekg_df.columns:
-        a = st.empty()
-        b = st.empty()
-        a.write(f'I am working your list of {ekg_df.shape[0]} EKGs with good recordings.')
-        prog_bar = st.progress(0)
-        for idx, row in ekg_df.iterrows():
-            prog_bar.progress((idx)/ekg_df.shape[0])
-            ekg_str = ekg_df.loc[idx, 'name']
-            ekg = Get_EKG(ekg_str)
-            # st.write(ekg_df)
-            clas = ekg_df.loc[idx, 'clas']
-            if clas in ['Atrial Fibrillation', 'Heart Rate Over 150', 'Inconclusive']:
-                ekg_df.loc[idx, 'PACs'] = None
-            else:
-                this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[
-                    0], 'clas']
-                b.write(f'I am working {ekg_str}')
-                ekg = Clean_EKG(ekg)
-                singles = Get_Singles(ekg)
-                PACs = Get_PACs(singles)
-                if Cull_Dense_R_Peak(ekg):
-                    ekg_df.loc[idx, 'PACs'] = None
-                else:
-                    ekg_df.loc[idx, 'PACs'] = PACs
-        prog_bar.empty()
-        b.empty()
-        a.empty()
-    else:
-        pass
-    pos_PACs = ekg_df[ekg_df.PACs > 0].shape[0]
-    not_null = ekg_df[ekg_df.PACs.notnull()].shape[0]
-    # set days for dataset
-    first_day = ekg_df.date.min()
-    last_day = ekg_df.date.max()
-    # create list of days for x_axis
-    x_range = pd.DataFrame(pd.date_range(first_day, last_day, freq='d'))
-    x_range.columns = ['date']
-    x_range.date = x_range.date.astype(str)
-    x_range['day'] = x_range.date.str[0:10]
-    x_range.reset_index(inplace=True, drop=True)
-    x_range = x_range['day']
-
-    afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
-    afib['day'] = afib.date.str[0:10]
-    afib.day = pd.to_datetime(afib.day)
-    afib['afib'] = 1
-    afib.drop_duplicates(subset='day', inplace=True)
-    afib = afib[['afib', 'day']]
-
-    temp = ekg_df.groupby(by='day').max()
-    temp['day'] = temp.date.str[0:10]
-    temp.reset_index(inplace=True, drop=True)
-
-    plot_df = pd.merge(temp, x_range, on='day', how='outer')
-    plot_df.day = pd.to_datetime(plot_df.day)
-    plot_df.sort_values(by='day', inplace=True)
-    plot_df.PACs.fillna(0, inplace=True)
-    plot_df.PACs = plot_df.PACs.astype(int)
-
-    export = pd.merge(plot_df, afib, on='day', how='outer')
-    export.afib = export.afib.fillna(0)
-    export.afib = export.afib.astype(int)
-    export = export[['day', 'PACs', 'afib']]
-
-    how = st.sidebar.radio('How to Plot PACs', ['Bar', 'Rolling Mean'])
-
-    fig, ax = plt.subplots(figsize=(18, 8))
-
-    if how == 'Bar':
-        plt.bar(export.day, export.PACs)
-    else:
-        n = st.sidebar.slider('Number of Days Rolling', min_value=1, max_value=30, value=5)
-        plot_df['avg'] = plot_df.PACs.rolling(window=n).mean()
-        plt.plot(plot_df.day, plot_df.avg)
-    ax.set_xticks(export.day[-1::-20], label=export.day[-1::-20])
-    plt.xticks(rotation=70, ha='right')
-    title_fontdict = {'fontsize': 24, 'fontweight': 10}
-    label_fontdict = {'fontsize': 20, 'fontweight': 8}
-    ax.set_ylabel('Number of PACs', fontdict=label_fontdict)
-    if afib.shape[0] > 0:
-        for day in list(set(afib.day.tolist())):
-            plt.vlines(day, 0, 15, colors='r', alpha=.5)
-        ax.set_title(
-            f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date - Days with AFib in Red', fontdict=title_fontdict)
-    else:
-        ax.set_title(
-            f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date', fontdict=title_fontdict)
-    st.pyplot(fig)
-    export.rename(columns={'day': 'date'}, inplace=True)
-    st.write('Export file for this figure is EKG_by_day.csv')
-    export.to_csv('EKG_by_day.csv', index=False)
-##########################################
-elif function == 'Show an EKG':
-    # selection
-    year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'], index=1)
-    month = st.sidebar.selectbox(
-        'Month of EKG', ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'])
-    ekgs = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
-    type = st.sidebar.selectbox('Classification', list(set(ekgs.clas.tolist())))
-    show_df = ekgs[ekgs.clas == type]
-    ekg_str = st.sidebar.selectbox('Choose an EKG', show_df.name)
-# select and clean EKG to show
-    ekg = Get_EKG(ekg_str)
-    # get the classification and PAC number for this ekg from ekg_df
-    this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
-    this_PACs = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'PACs']
-
-    st.write(f'You have selected {ekg_str}, classified as {this_classification}')
-    ekg = Clean_EKG(ekg)
-
-    # get singles and rate
-    singles = Get_Singles(ekg)
-    rate = Get_Rate(singles)
-
-    # plot EKG
-    x = ekg.seconds
-    y = ekg.micro_volts
-    fig, ax = plt.subplots(figsize=(15, 4))
-    ax.set_ylim(y.min(), y.max())
-
-    # set PACs and level of
-    if pd.isna(this_PACs):
-        PACs = None
-        level = 0
-    else:
-        PACs = int(this_PACs)
-        level = int(round(3*PACs/14, 0))
-    color_palette = sns.color_palette('RdYlGn_r')
-
-    if type == 'Atrial Fibrillation':
-        ax.set_facecolor(color_palette[5])
-    elif type == 'Inconclusive':
-        ax.set_facecolor(color_palette[4])
-    elif type == 'Heart Rate Over 120':
-        ax.set_facecolor(color_palette[4])
-    elif type == 'Heart Rate Under 50':
-        ax.set_facecolor(color_palette[4])
-    elif type == 'Heart Rate Over 150':
-        ax.set_facecolor(color_palette[5])
-    else:
-        ax.set_facecolor(color_palette[level])
-    # set title and labels
-    if pd.isna(this_PACs):
-        ax.set_title(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
-        # st.write(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
-    else:
-        # st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
-        ax.set_title(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
-    ax.set_xlabel('Seconds')
-    ax.yaxis.set_visible(False)
-    plt.plot(x, y)
-    st.pyplot(fig)
+st.write('Finished configs')
+# if os.path.isfile('EKGs.csv'):
+#     index = 0
+# else:
+#     index = 1
+# function = st.sidebar.selectbox(
+#     'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'], index=index)
+# # ekg_df = pd.read_csv('EKGs.csv')
+#
+# #############skip for now#################
+# if function == 'Reset EKG Database':
+#     a = st.empty()
+#     a.write(f'I am creating an index of your {len(ekgs)} EKGs...')
+#     ekg_df = Create_EKG_DF(ekgs)
+#     # poor = ekg_df[ekg_df.clas=='Poor Recording']
+#     ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
+#     ekg_df.to_csv('EKGs.csv', index=False)
+#     st.write(ekg_df)
+#     a.write(
+#         f'I have finished writing {ekg_df.shape[0]} EKGs with good recordings to EKGs.csv. Try another function!')
+# ##########################################
+# elif function == 'Show PACs Over Time':
+#     ekg_df = pd.read_csv('EKGs.csv')
+#     ekg_df.reset_index(inplace=True, drop=True)
+#
+#     if 'PACs' not in ekg_df.columns:
+#         a = st.empty()
+#         b = st.empty()
+#         a.write(f'I am working your list of {ekg_df.shape[0]} EKGs with good recordings.')
+#         prog_bar = st.progress(0)
+#         for idx, row in ekg_df.iterrows():
+#             prog_bar.progress((idx)/ekg_df.shape[0])
+#             ekg_str = ekg_df.loc[idx, 'name']
+#             ekg = Get_EKG(ekg_str)
+#             # st.write(ekg_df)
+#             clas = ekg_df.loc[idx, 'clas']
+#             if clas in ['Atrial Fibrillation', 'Heart Rate Over 150', 'Inconclusive']:
+#                 ekg_df.loc[idx, 'PACs'] = None
+#             else:
+#                 this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[
+#                     0], 'clas']
+#                 b.write(f'I am working {ekg_str}')
+#                 ekg = Clean_EKG(ekg)
+#                 singles = Get_Singles(ekg)
+#                 PACs = Get_PACs(singles)
+#                 if Cull_Dense_R_Peak(ekg):
+#                     ekg_df.loc[idx, 'PACs'] = None
+#                 else:
+#                     ekg_df.loc[idx, 'PACs'] = PACs
+#         prog_bar.empty()
+#         b.empty()
+#         a.empty()
+#     else:
+#         pass
+#     pos_PACs = ekg_df[ekg_df.PACs > 0].shape[0]
+#     not_null = ekg_df[ekg_df.PACs.notnull()].shape[0]
+#     # set days for dataset
+#     first_day = ekg_df.date.min()
+#     last_day = ekg_df.date.max()
+#     # create list of days for x_axis
+#     x_range = pd.DataFrame(pd.date_range(first_day, last_day, freq='d'))
+#     x_range.columns = ['date']
+#     x_range.date = x_range.date.astype(str)
+#     x_range['day'] = x_range.date.str[0:10]
+#     x_range.reset_index(inplace=True, drop=True)
+#     x_range = x_range['day']
+#
+#     afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
+#     afib['day'] = afib.date.str[0:10]
+#     afib.day = pd.to_datetime(afib.day)
+#     afib['afib'] = 1
+#     afib.drop_duplicates(subset='day', inplace=True)
+#     afib = afib[['afib', 'day']]
+#
+#     temp = ekg_df.groupby(by='day').max()
+#     temp['day'] = temp.date.str[0:10]
+#     temp.reset_index(inplace=True, drop=True)
+#
+#     plot_df = pd.merge(temp, x_range, on='day', how='outer')
+#     plot_df.day = pd.to_datetime(plot_df.day)
+#     plot_df.sort_values(by='day', inplace=True)
+#     plot_df.PACs.fillna(0, inplace=True)
+#     plot_df.PACs = plot_df.PACs.astype(int)
+#
+#     export = pd.merge(plot_df, afib, on='day', how='outer')
+#     export.afib = export.afib.fillna(0)
+#     export.afib = export.afib.astype(int)
+#     export = export[['day', 'PACs', 'afib']]
+#
+#     how = st.sidebar.radio('How to Plot PACs', ['Bar', 'Rolling Mean'])
+#
+#     fig, ax = plt.subplots(figsize=(18, 8))
+#
+#     if how == 'Bar':
+#         plt.bar(export.day, export.PACs)
+#     else:
+#         n = st.sidebar.slider('Number of Days Rolling', min_value=1, max_value=30, value=5)
+#         plot_df['avg'] = plot_df.PACs.rolling(window=n).mean()
+#         plt.plot(plot_df.day, plot_df.avg)
+#     ax.set_xticks(export.day[-1::-20], label=export.day[-1::-20])
+#     plt.xticks(rotation=70, ha='right')
+#     title_fontdict = {'fontsize': 24, 'fontweight': 10}
+#     label_fontdict = {'fontsize': 20, 'fontweight': 8}
+#     ax.set_ylabel('Number of PACs', fontdict=label_fontdict)
+#     if afib.shape[0] > 0:
+#         for day in list(set(afib.day.tolist())):
+#             plt.vlines(day, 0, 15, colors='r', alpha=.5)
+#         ax.set_title(
+#             f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date - Days with AFib in Red', fontdict=title_fontdict)
+#     else:
+#         ax.set_title(
+#             f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date', fontdict=title_fontdict)
+#     st.pyplot(fig)
+#     export.rename(columns={'day': 'date'}, inplace=True)
+#     st.write('Export file for this figure is EKG_by_day.csv')
+#     export.to_csv('EKG_by_day.csv', index=False)
+# ##########################################
+# elif function == 'Show an EKG':
+#     # selection
+#     ekg_df = pd.read_csv('EKGs.csv')
+#     year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'], index=1)
+#     month = st.sidebar.selectbox(
+#         'Month of EKG', ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'])
+#     ekgs = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
+#     type = st.sidebar.selectbox('Classification', list(set(ekgs.clas.tolist())))
+#     show_df = ekgs[ekgs.clas == type]
+#     ekg_str = st.sidebar.selectbox('Choose an EKG', show_df.name)
+# # select and clean EKG to show
+#     ekg = Get_EKG(ekg_str)
+#     # get the classification and PAC number for this ekg from ekg_df
+#     this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
+#     this_PACs = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'PACs']
+#
+#     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
+#     ekg = Clean_EKG(ekg)
+#
+#     # get singles and rate
+#     singles = Get_Singles(ekg)
+#     rate = Get_Rate(singles)
+#
+#     # plot EKG
+#     x = ekg.seconds
+#     y = ekg.micro_volts
+#     fig, ax = plt.subplots(figsize=(15, 4))
+#     ax.set_ylim(y.min(), y.max())
+#
+#     # set PACs and level of
+#     if pd.isna(this_PACs):
+#         PACs = None
+#         level = 0
+#     else:
+#         PACs = int(this_PACs)
+#         level = int(round(3*PACs/14, 0))
+#     color_palette = sns.color_palette('RdYlGn_r')
+#
+#     if type == 'Atrial Fibrillation':
+#         ax.set_facecolor(color_palette[5])
+#     elif type == 'Inconclusive':
+#         ax.set_facecolor(color_palette[4])
+#     elif type == 'Heart Rate Over 120':
+#         ax.set_facecolor(color_palette[4])
+#     elif type == 'Heart Rate Under 50':
+#         ax.set_facecolor(color_palette[4])
+#     elif type == 'Heart Rate Over 150':
+#         ax.set_facecolor(color_palette[5])
+#     else:
+#         ax.set_facecolor(color_palette[level])
+#     # set title and labels
+#     if pd.isna(this_PACs):
+#         ax.set_title(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
+#         # st.write(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
+#     else:
+#         # st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
+#         ax.set_title(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
+#     ax.set_xlabel('Seconds')
+#     ax.yaxis.set_visible(False)
+#     plt.plot(x, y)
+#     st.pyplot(fig)
