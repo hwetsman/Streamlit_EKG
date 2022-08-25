@@ -280,13 +280,18 @@ elif function == 'Show PACs Over Time':
 elif function == 'Show an EKG':
     # selection
     ekg_df = pd.read_csv('EKGs.csv')
+    ekg_df['string_pacs'] = ekg_df.PACs.astype(str)
+    ekg_df['show_name'] = ekg_df.name+' - '+ekg_df.string_pacs + ' PACs'
     year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'], index=1)
     month = st.sidebar.selectbox(
         'Month of EKG', ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'])
     ekgs = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
     type = st.sidebar.selectbox('Classification', list(set(ekgs.clas.tolist())))
     show_df = ekgs[ekgs.clas == type]
-    ekg_str = st.sidebar.selectbox('Choose an EKG', show_df.name)
+    show_name = st.sidebar.selectbox('Choose an EKG', show_df.show_name)
+    ekg_idx = show_df[show_df.show_name == show_name].index[0]
+    ekg_str = show_df.loc[ekg_idx, 'name']
+
 # select and clean EKG to show
     ekg = Get_EKG(ekg_str)
     # get the classification and PAC number for this ekg from ekg_df
