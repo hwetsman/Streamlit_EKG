@@ -159,8 +159,12 @@ path = './'
 dir = path + 'electrocardiograms'
 ekgs = os.listdir(dir)
 st.set_page_config(layout="wide")
+if os.path.isfile('EKGs.csv'):
+    index = 0
+else:
+    index = 1
 function = st.sidebar.selectbox(
-    'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'], index=0)
+    'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'], index=index)
 ekg_df = pd.read_csv('EKGs.csv')
 
 #############skip for now#################
