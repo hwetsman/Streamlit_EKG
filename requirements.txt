@@ -1,8 +1,5 @@
 aionotify==0.2.0
 altair==4.1.0
-anaconda-client @ file:///opt/concourse/worker/volumes/live/ce6e20ef-c449-4fb2-5463-03f67f4a0b31/volume/anaconda-client_1635342572171/work
-anaconda-navigator==2.1.2
-anaconda-project @ file:///tmp/build/80754af9/anaconda-project_1637161053845/work
 annoy==1.17.0
 anyio @ file:///opt/concourse/worker/volumes/live/64740ac7-3a9c-4fbb-6685-a51c4ff8b4ca/volume/anyio_1617783319350/work/dist
 appdirs==1.4.4
