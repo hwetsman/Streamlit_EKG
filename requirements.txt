@@ -2,24 +2,13 @@ aionotify==0.2.0
 altair==4.1.0
 annoy==1.17.0
 appdirs==1.4.4
-appnope @ file:///opt/concourse/worker/volumes/live/5f13e5b3-5355-4541-5fc3-f08850c73cf9/volume/appnope_1606859448618/work
-appscript @ file:///opt/concourse/worker/volumes/live/82e8b4c7-2416-4d10-509e-144ca79d9b1d/volume/appscript_1611426996703/work
 argh==0.26.2
-argon2-cffi @ file:///opt/concourse/worker/volumes/live/d733ceb5-7f19-407b-7da7-a386540ab855/volume/argon2-cffi_1613037492998/work
 arrow==0.13.1
-asn1crypto @ file:///tmp/build/80754af9/asn1crypto_1596577642040/work
 astor==0.8.1
-astroid @ file:///opt/concourse/worker/volumes/live/269b33aa-309a-4844-4a47-1ea5675bedfd/volume/astroid_1628063146562/work
-astropy @ file:///opt/concourse/worker/volumes/live/d8b26183-8e74-4368-7e73-a2ea553ba27c/volume/astropy_1638785511303/work
-async-generator @ file:///home/ktietz/src/ci/async_generator_1611927993394/work
 atomicwrites==1.4.0
-attrs @ file:///tmp/build/80754af9/attrs_1620827162558/work
-autopep8 @ file:///opt/conda/conda-bld/autopep8_1639166893812/work
 aws-lambda-builders==1.13.0
 aws-sam-cli==1.40.1
 aws-sam-translator==1.42.0
-Babel @ file:///tmp/build/80754af9/babel_1620871417480/work
-backcall @ file:///home/ktietz/src/ci/backcall_1611930011877/work
 backports.functools-lru-cache @ file:///tmp/build/80754af9/backports.functools_lru_cache_1618170165463/work
 backports.shutil-get-terminal-size @ file:///tmp/build/80754af9/backports.shutil_get_terminal_size_1608222128777/work
 backports.tempfile @ file:///home/linux1/recipes/ci/backports.tempfile_1610991236607/work
