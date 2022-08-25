@@ -1,7 +1,6 @@
 pandas
 matplotlib
 streamlit
-time
 os
 numpy
 seaborn
