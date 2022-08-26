@@ -6,6 +6,7 @@ import time
 import numpy as np
 import seaborn as sns
 from scipy.signal import argrelextrema
+import plotly.express as px
 
 
 def Create_EKG_DF(ekgs):
