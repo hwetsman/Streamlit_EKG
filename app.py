@@ -282,7 +282,7 @@ elif function == 'Show an EKG':
     ekg_df = pd.read_csv('EKGs.csv')
     ekg_df['string_pacs'] = ekg_df.PACs.astype(str)
     ekg_df.string_pacs.replace('nan', 'not able to measure', inplace=True)
-    st.write(ekg_df)
+    # st.write(ekg_df)
     ekg_df['show_name'] = ekg_df.name+' - '+ekg_df.string_pacs + ' PACs'
     year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'], index=1)
     month = st.sidebar.selectbox(
