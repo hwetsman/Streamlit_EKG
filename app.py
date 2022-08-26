@@ -312,10 +312,10 @@ elif function == 'Show PACs Over Time':
     export.rename(columns={'day': 'date'}, inplace=True)
 
     # create day of week graph
-    dow_df = ekg_df.copy()
+    # dow_df = ekg_df.copy()
     # st.write(dow_df)
-    dow_df.date = pd.to_datetime(dow_df.date)
-    dow_df['dow'] = ekg_df.date.dt.day_name()
+    # dow_df.date = pd.to_datetime(dow_df.date)
+    # dow_df['dow'] = ekg_df.date.dt.day_name()
     # st.write(dow_df)
 
     # st.write('Export file for this figure is EKG_by_day.csv')
@@ -368,3 +368,30 @@ elif function == 'Show an EKG':
     st.pyplot(fig)
 
     # plotly stuff
+    background = 'green'
+    fig = px.line(ekg, x="seconds", y="micro_volts", title='EKG')
+    fig.update_traces(line=dict(color="blue", width=0.5))
+    fig.update_layout(
+        xaxis=dict(
+            showline=True,
+            showgrid=False,
+            showticklabels=True,
+            linecolor='rgb(204, 204, 204)',
+            linewidth=2,
+            ticks='outside',
+            tickfont=dict(
+                family='Arial',
+                size=12,
+                color='rgb(82, 82, 82)',
+            ),
+        ),
+        yaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            showline=False,
+            showticklabels=False,
+        ),
+        showlegend=False,
+        plot_bgcolor=background
+    )
+    # st.plotly_chart(fig, use_container_width=True)
