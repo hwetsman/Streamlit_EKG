@@ -164,6 +164,22 @@ def Set_Color_For_PACs(pacs):
     return PACs, level
 
 
+def Set_Background_Color(level):
+    # PACs, level = Set_Color_For_PACs(this_PACs)
+    if type == 'Atrial Fibrillation':
+        ax.set_facecolor(color_palette[5])
+    elif type == 'Inconclusive':
+        ax.set_facecolor(color_palette[4])
+    elif type == 'Heart Rate Over 120':
+        ax.set_facecolor(color_palette[4])
+    elif type == 'Heart Rate Under 50':
+        ax.set_facecolor(color_palette[4])
+    elif type == 'Heart Rate Over 150':
+        ax.set_facecolor(color_palette[5])
+    else:
+        ax.set_facecolor(color_palette[level])
+
+
 # create streamlit page
 path = './'
 dir = path + 'electrocardiograms'
@@ -334,23 +350,11 @@ elif function == 'Show an EKG':
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
 
-    # set PACs and level of
+    # set PACs and level of background color
     PACs, level = Set_Color_For_PACs(this_PACs)
-
     color_palette = sns.color_palette('RdYlGn_r')
+    Set_Background_Color(level)
 
-    if type == 'Atrial Fibrillation':
-        ax.set_facecolor(color_palette[5])
-    elif type == 'Inconclusive':
-        ax.set_facecolor(color_palette[4])
-    elif type == 'Heart Rate Over 120':
-        ax.set_facecolor(color_palette[4])
-    elif type == 'Heart Rate Under 50':
-        ax.set_facecolor(color_palette[4])
-    elif type == 'Heart Rate Over 150':
-        ax.set_facecolor(color_palette[5])
-    else:
-        ax.set_facecolor(color_palette[level])
     # set title and labels
     if pd.isna(this_PACs):
         ax.set_title(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
