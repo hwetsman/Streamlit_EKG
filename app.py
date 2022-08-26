@@ -180,6 +180,14 @@ def Set_Background_Color(level):
         ax.set_facecolor(color_palette[level])
 
 
+def Set_Title(this_PACs, rate, PACs):
+    if pd.isna(this_PACs):
+        ax.set_title(
+            f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
+    else:
+        ax.set_title(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
+
+
 # create streamlit page
 path = './'
 dir = path + 'electrocardiograms'
@@ -349,20 +357,13 @@ elif function == 'Show an EKG':
     # plt stuff
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
-
-    # set PACs and level of background color
     PACs, level = Set_Color_For_PACs(this_PACs)
     color_palette = sns.color_palette('RdYlGn_r')
     Set_Background_Color(level)
-
-    # set title and labels
-    if pd.isna(this_PACs):
-        ax.set_title(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
-        # st.write(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
-    else:
-        # st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
-        ax.set_title(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
+    Set_Title(this_PACs, rate, PACs)
     ax.set_xlabel('Seconds')
     ax.yaxis.set_visible(False)
     plt.plot(x, y)
     st.pyplot(fig)
+
+    # plotly stuff
