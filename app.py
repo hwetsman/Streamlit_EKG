@@ -183,10 +183,10 @@ def Set_Background_Color(level):
 
 def Set_Title(this_PACs, rate, PACs):
     if pd.isna(this_PACs):
-        ax.set_title(
-            f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
+        title = f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.'
     else:
-        ax.set_title(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
+        title = f'The EKG evidences {PACs} PACs with a heart rate of {rate}'
+    return title
 
 
 # create streamlit page
@@ -362,41 +362,43 @@ elif function == 'Show an EKG':
     color_palette = sns.color_palette('RdYlGn_r')
     face_color = Set_Background_Color(level)
     ax.set_facecolor(color_palette[face_color])
-    Set_Title(this_PACs, rate, PACs)
+    title = Set_Title(this_PACs, rate, PACs)
+    ax.set_title(title)
     ax.set_xlabel('Seconds')
     ax.yaxis.set_visible(False)
     plt.plot(x, y)
-    st.pyplot(fig)
+    # st.pyplot(fig)
 
     # plotly stuff
     colorscales = px.colors.named_colorscales()
     scale = 'Tealrose'
     # st.write(px.colors.diverging.Tealrose[6])
-    face_color = px.colors.diverging.Tealrose[6]
+    background = px.colors.diverging.Tealrose[face_color+1]
     # st.write(type(face_color))
-    fig = px.line(ekg, x="seconds", y="micro_volts", title='EKG')
+    fig = px.line(ekg, x="seconds", y="micro_volts", width=700, height=500)
     fig.update_traces(line=dict(color="blue", width=0.5))
-    fig.update_layout(
-        xaxis=dict(
-            showline=True,
-            showgrid=False,
-            showticklabels=True,
-            linecolor='rgb(204, 204, 204)',
-            linewidth=2,
-            ticks='outside',
-            tickfont=dict(
-                family='Arial',
-                size=12,
-                color='rgb(82, 82, 82)',
-            ),
+    fig.update_layout(title_text=title, title_x=0.5, margin=dict(l=0, r=0, t=30, b=0),
+                      xaxis=dict(
+        showline=True,
+        showgrid=False,
+        showticklabels=True,
+        linecolor='rgb(204, 204, 204)',
+        linewidth=2,
+        ticks='outside',
+        tickfont=dict(
+            family='Arial',
+            size=12,
+            color='rgb(82, 82, 82)',
         ),
+    ),
         yaxis=dict(
             showgrid=False,
             zeroline=False,
             showline=False,
             showticklabels=False,
-        ),
+            visible=False
+    ),
         showlegend=False,
-        plot_bgcolor=face_color
+        plot_bgcolor=background
     )
-    # st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
