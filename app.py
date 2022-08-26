@@ -355,26 +355,14 @@ elif function == 'Show an EKG':
     x = ekg.seconds
     y = ekg.micro_volts
 
-    # plt stuff
-    # fig, ax = plt.subplots(figsize=(15, 4))
-    # ax.set_ylim(y.min(), y.max())
+    # set up for plotly
     PACs, level = Set_Color_For_PACs(this_PACs)
-    # color_palette = sns.color_palette('RdYlGn_r')
     face_color = Set_Background_Color(level)
-    # ax.set_facecolor(color_palette[face_color])
     title = Set_Title(this_PACs, rate, PACs)
-    # ax.set_title(title)
-    # ax.set_xlabel('Seconds')
-    # ax.yaxis.set_visible(False)
-    # plt.plot(x, y)
-    # st.pyplot(fig)
 
     # plotly stuff
     colorscales = px.colors.named_colorscales()
-    # scale = 'Tealrose'
-    # st.write(px.colors.diverging.Tealrose[6])
     background = px.colors.diverging.Tealrose[face_color+1]
-    # st.write(type(face_color))
     fig = px.line(ekg, x="seconds", y="micro_volts", width=700, height=500)
     fig.update_traces(line=dict(color="blue", width=0.5))
     fig.update_layout(title_text=title, title_x=0.5, margin=dict(l=0, r=0, t=30, b=0),
