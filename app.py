@@ -167,17 +167,17 @@ def Set_Color_For_PACs(pacs):
 
 def Set_Background_Color(level):
     if type == 'Atrial Fibrillation':
-        face_color = color_palette[5]
+        face_color = 5
     elif type == 'Inconclusive':
-        face_color = color_palette[4]
+        face_color = 4
     elif type == 'Heart Rate Over 120':
-        face_color = color_palette[4]
+        face_color = 4
     elif type == 'Heart Rate Under 50':
-        face_color = color_palette[4]
+        face_color = 4
     elif type == 'Heart Rate Over 150':
-        face_color = color_palette[5]
+        face_color = 5
     else:
-        face_color = color_palette[level]
+        face_color = level
     return face_color
 
 
@@ -361,7 +361,7 @@ elif function == 'Show an EKG':
     PACs, level = Set_Color_For_PACs(this_PACs)
     color_palette = sns.color_palette('RdYlGn_r')
     face_color = Set_Background_Color(level)
-    ax.set_facecolor(face_color)
+    ax.set_facecolor(color_palette[face_color])
     Set_Title(this_PACs, rate, PACs)
     ax.set_xlabel('Seconds')
     ax.yaxis.set_visible(False)
@@ -369,7 +369,11 @@ elif function == 'Show an EKG':
     st.pyplot(fig)
 
     # plotly stuff
-    background = 'green'
+    colorscales = px.colors.named_colorscales()
+    scale = 'Tealrose'
+    # st.write(px.colors.diverging.Tealrose[6])
+    face_color = px.colors.diverging.Tealrose[6]
+    # st.write(type(face_color))
     fig = px.line(ekg, x="seconds", y="micro_volts", title='EKG')
     fig.update_traces(line=dict(color="blue", width=0.5))
     fig.update_layout(
@@ -393,6 +397,6 @@ elif function == 'Show an EKG':
             showticklabels=False,
         ),
         showlegend=False,
-        plot_bgcolor=background
+        plot_bgcolor=face_color
     )
-    st.plotly_chart(fig, use_container_width=True)
+    # st.plotly_chart(fig, use_container_width=True)
