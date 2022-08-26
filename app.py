@@ -154,6 +154,16 @@ def Cull_Dense_R_Peak(ekg):
         return True
 
 
+def Set_Color_For_PACs(pacs):
+    if pd.isna(this_PACs):
+        PACs = None
+        level = 0
+    else:
+        PACs = int(this_PACs)
+        level = int(round(3*PACs/14, 0))
+    return PACs, level
+
+
 # create streamlit page
 path = './'
 dir = path + 'electrocardiograms'
@@ -214,6 +224,7 @@ elif function == 'Show PACs Over Time':
         a.empty()
     else:
         pass
+    # create calendar graph
     pos_PACs = ekg_df[ekg_df.PACs > 0].shape[0]
     not_null = ekg_df[ekg_df.PACs.notnull()].shape[0]
     # set days for dataset
@@ -274,6 +285,14 @@ elif function == 'Show PACs Over Time':
             f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date', fontdict=title_fontdict)
     st.pyplot(fig)
     export.rename(columns={'day': 'date'}, inplace=True)
+
+    # create day of week graph
+    dow_df = ekg_df.copy()
+    # st.write(dow_df)
+    dow_df.date = pd.to_datetime(dow_df.date)
+    dow_df['dow'] = ekg_df.date.dt.day_name()
+    # st.write(dow_df)
+
     # st.write('Export file for this figure is EKG_by_day.csv')
     # export.to_csv('EKG_by_day.csv', index=False)
 # ##########################################
@@ -310,16 +329,14 @@ elif function == 'Show an EKG':
     # plot EKG
     x = ekg.seconds
     y = ekg.micro_volts
+
+    # plt stuff
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
 
     # set PACs and level of
-    if pd.isna(this_PACs):
-        PACs = None
-        level = 0
-    else:
-        PACs = int(this_PACs)
-        level = int(round(3*PACs/14, 0))
+    PACs, level = Set_Color_For_PACs(this_PACs)
+
     color_palette = sns.color_palette('RdYlGn_r')
 
     if type == 'Atrial Fibrillation':
