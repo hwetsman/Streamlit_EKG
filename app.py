@@ -356,22 +356,22 @@ elif function == 'Show an EKG':
     y = ekg.micro_volts
 
     # plt stuff
-    fig, ax = plt.subplots(figsize=(15, 4))
-    ax.set_ylim(y.min(), y.max())
+    # fig, ax = plt.subplots(figsize=(15, 4))
+    # ax.set_ylim(y.min(), y.max())
     PACs, level = Set_Color_For_PACs(this_PACs)
-    color_palette = sns.color_palette('RdYlGn_r')
+    # color_palette = sns.color_palette('RdYlGn_r')
     face_color = Set_Background_Color(level)
-    ax.set_facecolor(color_palette[face_color])
+    # ax.set_facecolor(color_palette[face_color])
     title = Set_Title(this_PACs, rate, PACs)
-    ax.set_title(title)
-    ax.set_xlabel('Seconds')
-    ax.yaxis.set_visible(False)
-    plt.plot(x, y)
+    # ax.set_title(title)
+    # ax.set_xlabel('Seconds')
+    # ax.yaxis.set_visible(False)
+    # plt.plot(x, y)
     # st.pyplot(fig)
 
     # plotly stuff
     colorscales = px.colors.named_colorscales()
-    scale = 'Tealrose'
+    # scale = 'Tealrose'
     # st.write(px.colors.diverging.Tealrose[6])
     background = px.colors.diverging.Tealrose[face_color+1]
     # st.write(type(face_color))
