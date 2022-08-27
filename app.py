@@ -409,7 +409,109 @@ elif function == 'Show PACs Over Time':
         showlegend=True,
         plot_bgcolor='black'
     )
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
+
+    # create hours graph
+    hours_df = ekg_df.copy()
+    hours_df['date'] = pd.to_datetime(hours_df['date'])
+    hours_df['hour'] = hours_df['date'].dt.hour-1
+    hours_df = hours_df.drop(['vers'], axis=1)
+    hours_df.hour = hours_df['hour'].replace(-1, 23)
+    afib_hour = hours_df[hours_df.clas == 'Atrial Fibrillation']
+
+    hours_df = hours_df.drop(['name', 'date', 'clas'], axis=1)
+    hours_pac_group = hours_df.groupby(by=['day', 'hour']).max().reset_index(drop=False).dropna()
+    hours_pac_sum = hours_pac_group.groupby(by='hour').sum(
+    ).reset_index(drop=False).rename(columns={'PACs': 'total'})
+    hours_pac_max = hours_pac_group.groupby(by='hour').max(
+    ).reset_index(drop=False).rename(columns={'PACs': 'maximum'})
+    hours_pac_count = hours_pac_group.groupby(by='hour').count(
+    ).reset_index(drop=False).rename(columns={'PACs': 'number'})
+    hours_pac_graph = pd.merge(hours_pac_sum, hours_pac_count, on='hour', how='outer')
+    hours_pac_graph['average'] = hours_pac_graph.total/hours_pac_graph.number
+
+    afib_hour_group = afib_hour.groupby(by=['day', 'hour']).count().reset_index(drop=False)
+    afib_hour_group['occured'] = 1
+    afib_hour_graph = afib_hour_group.groupby(by='hour').count().reset_index(drop=False)
+    afib_hour_graph.drop(['day', 'name', 'date', 'clas', 'PACs'], inplace=True, axis=1)
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    # fig.add_trace(
+    #     go.Bar(x=hours_pac_graph.hour, y=hours_pac_graph.average, name="Average PACs"), secondary_y=False)
+    fig.add_trace(
+        go.Bar(x=hours_pac_max.hour, y=hours_pac_max.maximum, name="Max PACs"), secondary_y=False)
+    fig.add_trace(
+        go.Scatter(x=afib_hour_graph.hour, y=afib_hour_graph.occured, name="Number of Times Afib", mode="lines"), secondary_y=True)
+    title = 'Maximum PACs/30 Seconds and Afib Occurances by Hour of Day'
+    fig.update_layout(title_text=title, title_x=0.5, margin=dict(l=0, r=0, t=30, b=0),
+                      xaxis=dict(
+        showline=False,
+        showgrid=False,
+        showticklabels=True,
+        linecolor='rgb(204, 204, 204)',
+        linewidth=2,
+        ticks='outside',
+        tickfont=dict(
+            family='Arial',
+            size=12,
+            color='rgb(82, 82, 82)',
+        ),
+    ),
+        yaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            showline=False,
+            showticklabels=True,
+            visible=True
+    ),
+        showlegend=True,
+        plot_bgcolor='black'
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    # group = dow_df.groupby(by='dow').sum().rename(
+    #     columns={'PACs': 'sum'}).reset_index(drop=False)
+    # count = dow_df.groupby(by='dow').count().drop('PACs', axis=1).reset_index(drop=False)
+    #
+    # dow_graph = pd.merge(group, count, on='dow', how='outer').rename(columns={'sum': 'total'})
+    # dow_graph['average'] = dow_graph.total/dow_graph.name
+    # dow_graph.dow = dow_graph.dow.astype('category')
+    # dow_graph.dow = pd.Categorical(dow_graph.dow,
+    #                                categories=['Monday', 'Tuesday', 'Wednesday',
+    #                                            'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    #                                ordered=True)
+    # dow_graph.sort_values('dow', inplace=True)
+    #
+    # fig = make_subplots(specs=[[{"secondary_y": True}]])
+    # fig.add_trace(
+    #     go.Bar(x=dow_graph.dow, y=dow_graph.average, name="Average PACs"), secondary_y=False)
+    # fig.add_trace(
+    #     go.Scatter(x=afib_group.dow, y=afib_group.afib, name="Number of Times Afib", mode="lines"), secondary_y=True)
+    # title = 'Average PACs and Afib Occurances by Day of Week'
+    # fig.update_layout(title_text=title, title_x=0.5, margin=dict(l=0, r=0, t=30, b=0),
+    #                   xaxis=dict(
+    #     showline=False,
+    #     showgrid=False,
+    #     showticklabels=True,
+    #     linecolor='rgb(204, 204, 204)',
+    #     linewidth=2,
+    #     ticks='outside',
+    #     tickfont=dict(
+    #         family='Arial',
+    #         size=12,
+    #         color='rgb(82, 82, 82)',
+    #     ),
+    # ),
+    #     yaxis=dict(
+    #         showgrid=False,
+    #         zeroline=False,
+    #         showline=False,
+    #         showticklabels=True,
+    #         visible=True
+    # ),
+    #     showlegend=True,
+    #     plot_bgcolor='black'
+    # )
+    # st.plotly_chart(fig)
 # st.write('Export file for this figure is EKG_by_day.csv')
 # export.to_csv('EKG_by_day.csv', index=False)
 # ##########################################
