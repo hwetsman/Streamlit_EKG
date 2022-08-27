@@ -57,16 +57,16 @@ def Clean_EKG(ekg):
 # 0.002 seconds between readings so we need 25-row rolling frames
 
 
-def Find_QRS(ekg):
-    ekg1 = ekg.copy()
-    ekg1['qrs'] = 0
-    ekg1['rolling_min'] = ekg1.micro_volts.rolling(25, center=True).min()
-    ekg1['rolling_max'] = ekg1.micro_volts.rolling(25, center=True).max()
-    ekg1['diff'] = ekg1.rolling_max-ekg1.rolling_min
-    ekg1['waste'] = 0
-    ekg1['qrs'] = np.where(ekg1['diff'] > 500, 1, 0)
-    # st.write(np.where(ekg1['diff'] > 500, 1, 0))
-    # st.write(ekg1)
+# def Find_QRS(ekg):
+#     ekg1 = ekg.copy()
+#     ekg1['qrs'] = 0
+#     ekg1['rolling_min'] = ekg1.micro_volts.rolling(25, center=True).min()
+#     ekg1['rolling_max'] = ekg1.micro_volts.rolling(25, center=True).max()
+#     ekg1['diff'] = ekg1.rolling_max-ekg1.rolling_min
+#     ekg1['waste'] = 0
+#     ekg1['qrs'] = np.where(ekg1['diff'] > 500, 1, 0)
+#     # st.write(np.where(ekg1['diff'] > 500, 1, 0))
+#     # st.write(ekg1)
 
 
 def Get_R_Peaks(ekg):
@@ -74,8 +74,10 @@ def Get_R_Peaks(ekg):
     ekg['qrs'] = 0
     # size = st.sidebar.slider('first pass size', min_value=1, max_value=35, value=5)
     for i in range(ekg.shape[0]):
-        numbers = ekg.interval[i-4:i+4]
-        if numbers.max()-numbers.min() > 50:
+        # numbers = ekg.interval[i-4:i+4]
+        numbers = ekg.interval[1-12:i+12]
+        # if numbers.max()-numbers.min() > 50:
+        if numbers.max()-numbers.min() > 500:
             ekg.loc[i, 'qrs'] = 1
     # # create 3 empty cols
     ekg['int_peak'] = 0
@@ -114,8 +116,8 @@ def Get_R_Peaks(ekg):
 
 
 def Get_alt_r(ekg):
-    # n = 190
-    n = 125
+    n = 190
+    # n = 125
     ekg['int_peak'] = ekg.iloc[argrelextrema(ekg.micro_volts.values, np.greater_equal,
                                              order=n)[0]]['micro_volts']
     med = ekg.int_peak.median()
@@ -136,10 +138,11 @@ def Get_PACs(singles):
     singles['med'] = median
     singles['sq_diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
     PACs = int((singles[singles.sq_diff > .015].shape[0]/2)+.5)
+    # PACs = int(singles[singles.interval < .6*median].shape[0])
     # temporary visualization for dev
 
     # if PACs > 0:
-    #     st.write(idx, PACs, singles.sq_diff)
+    #     st.write(idx, median, singles.shape[0], PACs, singles.sq_diff)
     #     fig, ax = plt.subplots()
     #     plt.plot(ekg.index, ekg.micro_volts)
     #     for i in singles.index.tolist():
@@ -300,32 +303,50 @@ elif function == 'Show PACs Over Time':
     export.afib = export.afib.fillna(0)
     export.afib = export.afib.astype(int)
     export = export[['day', 'PACs', 'afib']]
+    export.rename(columns={'day': 'date'}, inplace=True)
 
+    # plotly stuff
     how = st.sidebar.radio('How to Plot PACs', ['Bar', 'Rolling Mean'])
-
-    fig, ax = plt.subplots(figsize=(18, 8))
-
     if how == 'Bar':
-        plt.bar(export.day, export.PACs)
+        fig = px.bar(export, x='date', y='PACs')
     else:
         n = st.sidebar.slider('Number of Days Rolling', min_value=1, max_value=30, value=5)
         plot_df['avg'] = plot_df.PACs.rolling(window=n).mean()
-        plt.plot(plot_df.day, plot_df.avg)
-    ax.set_xticks(export.day[-1::-20], label=export.day[-1::-20])
-    plt.xticks(rotation=70, ha='right')
-    title_fontdict = {'fontsize': 24, 'fontweight': 10}
-    label_fontdict = {'fontsize': 20, 'fontweight': 8}
-    ax.set_ylabel('Number of PACs', fontdict=label_fontdict)
+        fig = px.line(plot_df, x="day", y="avg")
+    fig.update_traces(marker_color='blue')
+    for day in list(set(afib.day.tolist())):
+        fig.add_vline(x=day, line_width=2,
+                      line_dash="dash", line_color="red")
+    # set title
     if afib.shape[0] > 0:
-        for day in list(set(afib.day.tolist())):
-            plt.vlines(day, 0, 15, colors='r', alpha=.5)
-        ax.set_title(
-            f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date - Days with AFib in Red', fontdict=title_fontdict)
+        title = f'Daily Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date - Days with AFib in Red'
     else:
-        ax.set_title(
-            f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date', fontdict=title_fontdict)
-    st.pyplot(fig)
-    export.rename(columns={'day': 'date'}, inplace=True)
+        title = f'Daily Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date'
+    fig.update_layout(title_text=title, title_x=0.5, margin=dict(l=0, r=0, t=30, b=0),
+                      xaxis=dict(
+        showline=False,
+        showgrid=False,
+        showticklabels=True,
+        linecolor='rgb(204, 204, 204)',
+        linewidth=2,
+        ticks='outside',
+        tickfont=dict(
+            family='Arial',
+            size=12,
+            color='rgb(82, 82, 82)',
+        ),
+    ),
+        yaxis=dict(
+            showgrid=True,
+            zeroline=True,
+            showline=False,
+            showticklabels=True,
+            visible=True
+    ),
+        showlegend=False,
+        plot_bgcolor='black'
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
     # create day of week graph
     # dow_df = ekg_df.copy()
@@ -364,10 +385,6 @@ elif function == 'Show an EKG':
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
 
-    # experimental
-    Find_QRS(ekg)
-    # experimental
-
     # get singles and rate
     singles = Get_Singles(ekg)
     rate = Get_Rate(singles)
@@ -386,9 +403,9 @@ elif function == 'Show an EKG':
     colorscales = px.colors.named_colorscales()
     background = px.colors.diverging.Tealrose[face_color+1]
     fig = px.line(ekg, x="seconds", y="micro_volts", width=700, height=500)
-    # for i, r in singles.iterrows():
-    #     fig.add_vline(x=singles.loc[i, 'seconds'], line_width=1,
-    #                   line_dash="dash", line_color="green")
+    for i, r in singles.iterrows():
+        fig.add_vline(x=singles.loc[i, 'seconds'], line_width=1,
+                      line_dash="dash", line_color="green")
     fig.update_traces(line=dict(color="blue", width=0.5))
     fig.update_layout(title_text=title, title_x=0.5, margin=dict(l=0, r=0, t=30, b=0),
                       xaxis=dict(
