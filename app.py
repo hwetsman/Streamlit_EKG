@@ -7,6 +7,8 @@ import numpy as np
 import seaborn as sns
 from scipy.signal import argrelextrema
 import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 def Create_EKG_DF(ekgs):
@@ -349,14 +351,67 @@ elif function == 'Show PACs Over Time':
     st.plotly_chart(fig, use_container_width=True)
 
     # create day of week graph
-    # dow_df = ekg_df.copy()
-    # st.write(dow_df)
-    # dow_df.date = pd.to_datetime(dow_df.date)
-    # dow_df['dow'] = ekg_df.date.dt.day_name()
-    # st.write(dow_df)
+    dow_afib = afib.copy().rename(columns={'day': 'date'})
+    dow_afib.date = pd.to_datetime(dow_afib.date)
+    dow_afib['dow'] = dow_afib.date.dt.day_name()
 
-    # st.write('Export file for this figure is EKG_by_day.csv')
-    # export.to_csv('EKG_by_day.csv', index=False)
+    afib_group = dow_afib.groupby(by='dow').sum().reset_index(drop=False)
+    afib_group.dow = pd.Categorical(afib_group.dow,
+                                    categories=['Monday', 'Tuesday', 'Wednesday',
+                                                'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                                    ordered=True)
+    afib_group.sort_values('dow', inplace=True)
+
+    dow_df = ekg_df.copy()
+    dow_df['date'] = pd.to_datetime(dow_df['date'])
+    dow_df['dow'] = dow_df['date'].dt.day_name()
+    dow_df = dow_df.drop(['vers', 'clas', 'date', 'day'], axis=1)
+    group = dow_df.groupby(by='dow').sum().rename(
+        columns={'PACs': 'sum'}).reset_index(drop=False)
+    count = dow_df.groupby(by='dow').count().drop('PACs', axis=1).reset_index(drop=False)
+
+    dow_graph = pd.merge(group, count, on='dow', how='outer').rename(columns={'sum': 'total'})
+    dow_graph['average'] = dow_graph.total/dow_graph.name
+    dow_graph.dow = dow_graph.dow.astype('category')
+    dow_graph.dow = pd.Categorical(dow_graph.dow,
+                                   categories=['Monday', 'Tuesday', 'Wednesday',
+                                               'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                                   ordered=True)
+    dow_graph.sort_values('dow', inplace=True)
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(
+        go.Bar(x=dow_graph.dow, y=dow_graph.average, name="Average PACs"), secondary_y=False)
+    fig.add_trace(
+        go.Scatter(x=afib_group.dow, y=afib_group.afib, name="Number of Times Afib", mode="lines"), secondary_y=True)
+    title = 'Average PACs and Afib Occurances by Day of Week'
+    fig.update_layout(title_text=title, title_x=0.5, margin=dict(l=0, r=0, t=30, b=0),
+                      xaxis=dict(
+        showline=False,
+        showgrid=False,
+        showticklabels=True,
+        linecolor='rgb(204, 204, 204)',
+        linewidth=2,
+        ticks='outside',
+        tickfont=dict(
+            family='Arial',
+            size=12,
+            color='rgb(82, 82, 82)',
+        ),
+    ),
+        yaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            showline=False,
+            showticklabels=True,
+            visible=True
+    ),
+        showlegend=True,
+        plot_bgcolor='black'
+    )
+    st.plotly_chart(fig)
+# st.write('Export file for this figure is EKG_by_day.csv')
+# export.to_csv('EKG_by_day.csv', index=False)
 # ##########################################
 elif function == 'Show an EKG':
     # selection
