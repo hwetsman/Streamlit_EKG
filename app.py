@@ -560,9 +560,10 @@ elif function == 'Show an EKG':
     colorscales = px.colors.named_colorscales()
     background = px.colors.diverging.Tealrose[face_color+1]
     fig = px.line(ekg, x="seconds", y="micro_volts", width=700, height=500)
-    for i, r in singles.iterrows():
-        fig.add_vline(x=singles.loc[i, 'seconds'], line_width=1,
-                      line_dash="dash", line_color="green")
+    # dotted lines for debugging
+    # for i, r in singles.iterrows():
+    #     fig.add_vline(x=singles.loc[i, 'seconds'], line_width=1,
+    #                   line_dash="dash", line_color="green")
     fig.update_traces(line=dict(color="blue", width=0.5))
     fig.update_layout(title_text=title, title_x=0.5, margin=dict(l=0, r=0, t=30, b=0),
                       xaxis=dict(
