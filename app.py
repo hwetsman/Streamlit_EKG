@@ -53,6 +53,21 @@ def Clean_EKG(ekg):
     ekg = Get_alt_r(ekg)
     return ekg
 
+# QRS complexes happen in less than 0.05 seconds and are at least 500 microvolts in difference
+# 0.002 seconds between readings so we need 25-row rolling frames
+
+
+def Find_QRS(ekg):
+    ekg1 = ekg.copy()
+    ekg1['qrs'] = 0
+    ekg1['rolling_min'] = ekg1.micro_volts.rolling(25, center=True).min()
+    ekg1['rolling_max'] = ekg1.micro_volts.rolling(25, center=True).max()
+    ekg1['diff'] = ekg1.rolling_max-ekg1.rolling_min
+    ekg1['waste'] = 0
+    ekg1['qrs'] = np.where(ekg1['diff'] > 500, 1, 0)
+    # st.write(np.where(ekg1['diff'] > 500, 1, 0))
+    # st.write(ekg1)
+
 
 def Get_R_Peaks(ekg):
     # identify QRS complexes
@@ -99,7 +114,8 @@ def Get_R_Peaks(ekg):
 
 
 def Get_alt_r(ekg):
-    n = 190
+    # n = 190
+    n = 125
     ekg['int_peak'] = ekg.iloc[argrelextrema(ekg.micro_volts.values, np.greater_equal,
                                              order=n)[0]]['micro_volts']
     med = ekg.int_peak.median()
@@ -340,6 +356,7 @@ elif function == 'Show an EKG':
 
 # select and clean EKG to show
     ekg = Get_EKG(ekg_str)
+
     # get the classification and PAC number for this ekg from ekg_df
     this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
     this_PACs = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'PACs']
@@ -347,10 +364,15 @@ elif function == 'Show an EKG':
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
 
+    # experimental
+    Find_QRS(ekg)
+    # experimental
+
     # get singles and rate
     singles = Get_Singles(ekg)
     rate = Get_Rate(singles)
-
+    # st.write(ekg)
+    # st.write(singles)
     # plot EKG
     x = ekg.seconds
     y = ekg.micro_volts
@@ -364,6 +386,9 @@ elif function == 'Show an EKG':
     colorscales = px.colors.named_colorscales()
     background = px.colors.diverging.Tealrose[face_color+1]
     fig = px.line(ekg, x="seconds", y="micro_volts", width=700, height=500)
+    # for i, r in singles.iterrows():
+    #     fig.add_vline(x=singles.loc[i, 'seconds'], line_width=1,
+    #                   line_dash="dash", line_color="green")
     fig.update_traces(line=dict(color="blue", width=0.5))
     fig.update_layout(title_text=title, title_x=0.5, margin=dict(l=0, r=0, t=30, b=0),
                       xaxis=dict(
