@@ -316,9 +316,19 @@ elif function == 'Show PACs Over Time':
         plot_df['avg'] = plot_df.PACs.rolling(window=n).mean()
         fig = px.line(plot_df, x="day", y="avg")
     fig.update_traces(marker_color='blue')
+    n = 0
     for day in list(set(afib.day.tolist())):
-        fig.add_vline(x=day, line_width=2,
-                      line_dash="dash", line_color="red")
+        n = n+1
+        anno = str(pd.to_datetime(day).date())
+        even = (n % 2 == 0)
+        if even:
+            posit = 'top'
+        else:
+            posit = 'top left'
+        fig.add_vline(x=day.timestamp()*1000, line_width=2,
+                      line_dash="dash", line_color="red", annotation_text=f'{anno}', annotation_position=posit)
+        # fig.add_vline(x=day, line_width=2,
+        #               line_dash="dash", line_color="red")  # , annotation_text=f'{anno}')
     # set title
     if afib.shape[0] > 0:
         title = f'Daily Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date - Days with AFib in Red'
