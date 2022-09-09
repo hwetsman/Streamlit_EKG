@@ -59,16 +59,21 @@ def Clean_EKG(ekg):
 # 0.002 seconds between readings so we need 25-row rolling frames
 
 
-# def Find_QRS(ekg):
-#     ekg1 = ekg.copy()
-#     ekg1['qrs'] = 0
-#     ekg1['rolling_min'] = ekg1.micro_volts.rolling(25, center=True).min()
-#     ekg1['rolling_max'] = ekg1.micro_volts.rolling(25, center=True).max()
-#     ekg1['diff'] = ekg1.rolling_max-ekg1.rolling_min
-#     ekg1['waste'] = 0
-#     ekg1['qrs'] = np.where(ekg1['diff'] > 500, 1, 0)
-#     # st.write(np.where(ekg1['diff'] > 500, 1, 0))
-#     # st.write(ekg1)
+def Find_QRS(ekg):
+    """
+    This is an attempt at an improved QRS finder. The problem is finding the correct
+    parameters of rolling window and microvolt difference in that window. It remains
+    unused and experimental.
+    """
+    ekg1 = ekg.copy()
+    ekg1['qrs'] = 0
+    ekg1['rolling_min'] = ekg1.micro_volts.rolling(25, center=True).min()
+    ekg1['rolling_max'] = ekg1.micro_volts.rolling(25, center=True).max()
+    ekg1['diff'] = ekg1.rolling_max-ekg1.rolling_min
+    ekg1['waste'] = 0
+    ekg1['qrs'] = np.where(ekg1['diff'] > 500, 1, 0)
+    # st.write(np.where(ekg1['diff'] > 500, 1, 0))
+    # st.write(ekg1)
 
 
 def Get_R_Peaks(ekg):
