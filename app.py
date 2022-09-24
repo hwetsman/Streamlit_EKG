@@ -223,10 +223,19 @@ def Set_Title(this_PACs, rate, PACs):
 st.set_page_config(layout="wide")
 
 # set paths
+years = ['2019', '2020', '2021', '2022']
 path = './'
-dir_path = f'{path}electrocardiograms_{year}'
+
 dir = path + 'electrocardiograms'
-ekgs = os.listdir(dir)
+
+# create list of ekgs
+ekgs = []
+for year in years:
+    year_list = os.listdir(f'{path}electrocardiograms_{year}')
+    st.write(year_list)
+    ekgs = ekgs+year_list
+    st.write(len(ekgs))
+
 
 if os.path.isfile('EKGs.csv'):
     index = 0
