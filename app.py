@@ -25,7 +25,7 @@ def Create_EKG_DF(ekgs):
             #     # st.write(i)
             temp = pd.DataFrame()
             file = f'{path}electrocardiograms_{year}/{ekgs[i]}'
-        #     prog_bar.progress(i/len(ekgs))
+            prog_bar.progress(i/len(ekgs))
             # st.write(file)
             example = pd.read_csv(file)
             # st.write(example)
@@ -42,7 +42,7 @@ def Create_EKG_DF(ekgs):
     ekg_df['day'] = ekg_df.date.str[0:10]
     ekg_df.date = pd.to_datetime(ekg_df.date)
     ekg_df.sort_values(by='date', inplace=True)
-    st.write(ekg_df)
+    # st.write(ekg_df)
     ekg_df = ekg_df.reset_index(drop=True)
     # st.write('I have finished writing EKGs.csv. Try another function!')
     # st.write(ekg_df)
@@ -264,7 +264,7 @@ if function == 'Reset EKG Database':
     # poor = ekg_df[ekg_df.clas=='Poor Recording']
     ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
     ekg_df.to_csv('EKGs.csv', index=False)
-    st.write(ekg_df)
+    # st.write(ekg_df)
     a.write(
         f'I have finished writing {ekg_df.shape[0]} EKGs with good recordings to EKGs.csv. Next, select Show PACs Over Time to process the EKGs')
 # ##########################################
