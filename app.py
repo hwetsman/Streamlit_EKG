@@ -49,8 +49,9 @@ def Create_EKG_DF(ekgs):
     return ekg_df
 
 
-def Get_EKG(name):
-    file = dir+'/'+name
+def Get_EKG(name, year):
+    file = f'{path}electrocardiograms_{year}/{name}'
+    # file = dir+'/'+name
     df = pd.read_csv(file)
     # st.write(df)
     return df
@@ -242,10 +243,7 @@ dir = path + 'electrocardiograms'
 ekgs = []
 for year in years:
     year_list = os.listdir(f'{path}electrocardiograms_{year}')
-    # st.write(year_list)
     ekgs = ekgs+year_list
-    # st.write(len(ekgs))
-
 
 if os.path.isfile('EKGs.csv'):
     index = 0
@@ -279,9 +277,12 @@ elif function == 'Show PACs Over Time':
         a.write(f'I am working your list of {ekg_df.shape[0]} EKGs with good recordings.')
         prog_bar = st.progress(0)
         for idx, row in ekg_df.iterrows():
+            directory = ekg_df.loc[idx, 'dir']
+            # st.write(directory)
+            year = directory[-4:]
             prog_bar.progress((idx)/ekg_df.shape[0])
             ekg_str = ekg_df.loc[idx, 'name']
-            ekg = Get_EKG(ekg_str)
+            ekg = Get_EKG(ekg_str, year)
             # st.write(ekg_df)
             clas = ekg_df.loc[idx, 'clas']
             if clas in ['Atrial Fibrillation', 'Heart Rate Over 150', 'Inconclusive']:
@@ -575,7 +576,7 @@ elif function == 'Show an EKG':
     ekg_str = show_df.loc[ekg_idx, 'name']
 
 # select and clean EKG to show
-    ekg = Get_EKG(ekg_str)
+    ekg = Get_EKG(ekg_str, year)
 
     # get the classification and PAC number for this ekg from ekg_df
     this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
