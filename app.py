@@ -12,9 +12,13 @@ from plotly.subplots import make_subplots
 
 
 def Create_EKG_DF(ekgs):
+    years = ['2019', '2020', '2021', '2022']
     ekg_df = pd.DataFrame()
     prog_bar = st.progress(0)
+# for year in years:
+
     for i in range(len(ekgs)):
+        temp = pd.DataFrame()
         file = dir+'/'+ekgs[i]
         prog_bar.progress(i/len(ekgs))
         example = pd.read_csv(file)
@@ -29,7 +33,7 @@ def Create_EKG_DF(ekgs):
     ekg_df['day'] = ekg_df.date.str[0:10]
     ekg_df.date = pd.to_datetime(ekg_df.date)
     ekg_df.sort_values(by='date', inplace=True)
-
+    # ekg_df = ekg_df.merge(temp,by='date',how='outer')
     # st.write('I have finished writing EKGs.csv. Try another function!')
     # st.write(ekg_df)
     return ekg_df
@@ -216,10 +220,14 @@ def Set_Title(this_PACs, rate, PACs):
 
 
 # create streamlit page
+st.set_page_config(layout="wide")
+
+# set paths
 path = './'
+dir_path = f'{path}electrocardiograms_{year}'
 dir = path + 'electrocardiograms'
 ekgs = os.listdir(dir)
-st.set_page_config(layout="wide")
+
 if os.path.isfile('EKGs.csv'):
     index = 0
     ekg_df = pd.read_csv('EKGs.csv')
@@ -229,7 +237,7 @@ else:
     index = 1
 function = st.sidebar.selectbox(
     'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'], index=index)
-# # ekg_df = pd.read_csv('EKGs.csv')
+
 #
 # #############skip for now#################
 if function == 'Reset EKG Database':
