@@ -15,25 +15,35 @@ def Create_EKG_DF(ekgs):
     years = ['2019', '2020', '2021', '2022']
     ekg_df = pd.DataFrame()
     prog_bar = st.progress(0)
-# for year in years:
+    ekg_df = pd.DataFrame()
+    for year in years:
+        # st.write(year)
+        ekgs = [x for x in os.listdir(f'{path}electrocardiograms_{year}') if x != '.DS_Store']
 
-    for i in range(len(ekgs)):
-        temp = pd.DataFrame()
-        file = dir+'/'+ekgs[i]
-        prog_bar.progress(i/len(ekgs))
-        example = pd.read_csv(file)
-        dob = example.loc['Date of Birth', 'Name']
-        date = example.loc['Recorded Date', 'Name']
-        classification = example.loc['Classification', 'Name']
-        version = example.loc['Software Version', 'Name']
-        ekg_df.loc[i, 'name'] = ekgs[i]
-        ekg_df.loc[i, 'date'] = date
-        ekg_df.loc[i, 'clas'] = classification
-        ekg_df.loc[i, 'vers'] = version
+        # st.write(len(ekgs))
+        for i in range(len(ekgs)):
+            #     # st.write(i)
+            temp = pd.DataFrame()
+            file = f'{path}electrocardiograms_{year}/{ekgs[i]}'
+        #     prog_bar.progress(i/len(ekgs))
+            # st.write(file)
+            example = pd.read_csv(file)
+            # st.write(example)
+            dob = example.loc['Date of Birth', 'Name']
+            date = example.loc['Recorded Date', 'Name']
+            classification = example.loc['Classification', 'Name']
+            version = example.loc['Software Version', 'Name']
+            ekg_df.loc[f'{year}_{i}', 'name'] = ekgs[i]
+            ekg_df.loc[f'{year}_{i}', 'date'] = date
+            ekg_df.loc[f'{year}_{i}', 'clas'] = classification
+            ekg_df.loc[f'{year}_{i}', 'vers'] = version
+            ekg_df.loc[f'{year}_{i}', 'dir'] = f'{path}electrocardiograms_{year}'
+            # st.write(ekg_df)
     ekg_df['day'] = ekg_df.date.str[0:10]
     ekg_df.date = pd.to_datetime(ekg_df.date)
     ekg_df.sort_values(by='date', inplace=True)
-    # ekg_df = ekg_df.merge(temp,by='date',how='outer')
+    st.write(ekg_df)
+    ekg_df = ekg_df.reset_index(drop=True)
     # st.write('I have finished writing EKGs.csv. Try another function!')
     # st.write(ekg_df)
     return ekg_df
@@ -232,9 +242,9 @@ dir = path + 'electrocardiograms'
 ekgs = []
 for year in years:
     year_list = os.listdir(f'{path}electrocardiograms_{year}')
-    st.write(year_list)
+    # st.write(year_list)
     ekgs = ekgs+year_list
-    st.write(len(ekgs))
+    # st.write(len(ekgs))
 
 
 if os.path.isfile('EKGs.csv'):
